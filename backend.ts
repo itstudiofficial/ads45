@@ -391,27 +391,28 @@ export class AdsprediaBackend {
       const i = db.transactions.findIndex(t => t.id === id);
       if (i > -1) { 
         const tx = db.transactions[i];
-        if (tx.status === 'completed') return false; 
+        if (tx.status !== 'pending' && s !== 'pending') return false; 
         
         tx.status = s; 
 
-        if (s === 'completed') {
-           const user = Object.values(db.users).find(u => u.id === tx.userId);
-           if (user) {
-              if (tx.type === 'deposit') {
-                user.balance = (user.balance || 0) + tx.amount;
-                user.coins = (user.coins || 0) + Math.floor(tx.amount * 1000);
-              } 
-              db.users[user.email.toLowerCase()] = user;
-           }
-        } else if (s === 'rejected') {
-            const user = Object.values(db.users).find(u => u.id === tx.userId);
-            if (user && tx.type === 'withdrawal') {
-                user.balance = (user.balance || 0) + tx.amount;
-                user.coins = (user.coins || 0) + Math.floor(tx.amount * 1000);
-                db.users[user.email.toLowerCase()] = user;
+        const user = Object.values(db.users).find(u => u.id === tx.userId);
+        if (user) {
+          if (s === 'completed') {
+            if (tx.type === 'deposit') {
+              user.balance = (user.balance || 0) + tx.amount;
+              user.coins = (user.coins || 0) + Math.floor(tx.amount * 1000);
             }
+            // For withdrawals, balance is deducted on creation, so no extra work here on 'completed'
+          } else if (s === 'rejected') {
+            if (tx.type === 'withdrawal') {
+              // Return funds on rejected withdrawal
+              user.balance = (user.balance || 0) + tx.amount;
+              user.coins = (user.coins || 0) + Math.floor(tx.amount * 1000);
+            }
+          }
+          db.users[user.email.toLowerCase()] = user;
         }
+        
         this.saveDB(db); 
         return true; 
       }
