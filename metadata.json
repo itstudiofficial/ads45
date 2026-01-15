@@ -1,0 +1,7 @@
+{
+  "name": "AdsPredia - Micro Task & Monetization",
+  "description": "AdsPredia is a smart advertising network where users promote brands, complete simple tasks, and collect real rewards. Advertise your business or generate income online — all in one powerful platform.",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}
